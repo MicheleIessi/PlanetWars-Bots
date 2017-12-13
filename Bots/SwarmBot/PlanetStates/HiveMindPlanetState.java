@@ -1,9 +1,9 @@
-package SwarmBot.PlanetStates;
+package Bots.SwarmBot.PlanetStates;
 
-import SwarmBot.GameFiles.Fleet;
-import SwarmBot.GameFiles.Planet;
-import SwarmBot.GameFiles.PlanetWars;
-import SwarmBot.MyBot;
+import Bots.SwarmBot.GameFiles.Fleet;
+import Bots.SwarmBot.GameFiles.Planet;
+import Bots.SwarmBot.GameFiles.PlanetWars;
+import Bots.SwarmBot.MyBot;
 
 import java.util.HashMap;
 import java.util.List;

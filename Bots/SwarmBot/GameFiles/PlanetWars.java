@@ -1,17 +1,15 @@
-package StateBot.GameFiles;// Contestants do not need to worry about anything in this file. This is just
+package Bots.SwarmBot.GameFiles;
+
+// Contestants do not need to worry about anything in this file. This is just
 // helper code that does the boring stuff for you, so you can focus on the
 // interesting stuff. That being said, you're welcome to change anything in
 // this file if you know what you're doing.
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
+import java.io.*;
 
 public class PlanetWars {
-    // Constructs a SwarmBot.GameFiles.GameFiles.PlanetWars object instance, given a string containing a
+    // Constructs a Bots.SwarmBot.GameFiles.GameFiles.PlanetWars object instance, given a string containing a
     // description of a game state.
     public PlanetWars(String gameStateString) {
 	planets = new ArrayList<Planet>();

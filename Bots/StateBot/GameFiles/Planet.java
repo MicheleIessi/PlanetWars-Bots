@@ -1,4 +1,4 @@
-package StateBot.GameFiles;
+package Bots.StateBot.GameFiles;
 
 public class Planet implements Cloneable {
     // Initializes a planet.

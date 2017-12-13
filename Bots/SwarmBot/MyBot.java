@@ -1,8 +1,8 @@
-package SwarmBot;
+package Bots.SwarmBot;
 
-import SwarmBot.GameFiles.Planet;
-import SwarmBot.GameFiles.PlanetWars;
-import SwarmBot.PlanetStates.*;
+import Bots.SwarmBot.GameFiles.Planet;
+import Bots.SwarmBot.GameFiles.PlanetWars;
+import Bots.SwarmBot.PlanetStates.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.Map.Entry;
 import java.util.logging.Logger;
 
 public class MyBot {
-	// The DoTurn function is where your code goes. The SwarmBot.GameFiles.GameFiles.PlanetWars object
+	// The DoTurn function is where your code goes. The Bots.SwarmBot.GameFiles.GameFiles.PlanetWars object
     // contains the state of the game, including information about all planets
     // and fleets that currently exist. Inside this function, you issue orders
     // using the pw.IssueOrder() function. For example, to send 10 ships from
@@ -63,7 +63,7 @@ public class MyBot {
     }
 
     public static void logMessage(String msg) {
-		Logger.getLogger(LOGGER_NAME).info( msg);
+		Logger.getLogger(LOGGER_NAME).info(msg);
 	}
 
     public static Map<Integer, IPlanetState> getPlanetStateMap(PlanetWars pw) {

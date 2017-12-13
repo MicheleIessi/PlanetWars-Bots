@@ -1,4 +1,4 @@
-package SwarmBot.GameFiles;
+package Bots.StateBot.GameFiles;
 
 public class Fleet implements Comparable, Cloneable {
     // Initializes a fleet.

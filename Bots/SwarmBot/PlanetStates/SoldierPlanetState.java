@@ -1,7 +1,7 @@
-package SwarmBot.PlanetStates;
+package Bots.SwarmBot.PlanetStates;
 
-import SwarmBot.GameFiles.Planet;
-import SwarmBot.GameFiles.PlanetWars;
+import Bots.SwarmBot.GameFiles.Planet;
+import Bots.SwarmBot.GameFiles.PlanetWars;
 
 public class SoldierPlanetState implements IPlanetState {
 

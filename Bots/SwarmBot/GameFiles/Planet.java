@@ -1,4 +1,4 @@
-package SwarmBot.GameFiles;
+package Bots.SwarmBot.GameFiles;
 
 public class Planet implements Cloneable {
     // Initializes a planet.

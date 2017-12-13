@@ -1,11 +1,11 @@
-package StateBot;
+package Bots.StateBot;
 
-import StateBot.GameStates.ColonizationState;
-import StateBot.GameStates.DefenseState;
-import StateBot.GameStates.IGameState;
-import StateBot.GameStates.OffenseState;
+import Bots.StateBot.GameStates.ColonizationState;
+import Bots.StateBot.GameStates.DefenseState;
+import Bots.StateBot.GameStates.IGameState;
+import Bots.StateBot.GameStates.OffenseState;
 
-import StateBot.GameFiles.*;
+import Bots.StateBot.GameFiles.*;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -13,7 +13,7 @@ import java.util.Map.Entry;
 public class MyBot {
 
 	public static IGameState gameState = null;
-    // The DoTurn function is where your code goes. The SwarmBot.GameFiles.GameFiles.PlanetWars object
+    // The DoTurn function is where your code goes. The Bots.SwarmBot.GameFiles.GameFiles.PlanetWars object
     // contains the state of the game, including information about all planets
     // and fleets that currently exist. Inside this function, you issue orders
     // using the pw.IssueOrder() function. For example, to send 10 ships from

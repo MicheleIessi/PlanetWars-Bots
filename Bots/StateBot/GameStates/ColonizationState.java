@@ -1,8 +1,8 @@
-package StateBot.GameStates;
+package Bots.StateBot.GameStates;
 
-import StateBot.GameFiles.Fleet;
-import StateBot.GameFiles.Planet;
-import StateBot.GameFiles.PlanetWars;
+import Bots.StateBot.GameFiles.Fleet;
+import Bots.StateBot.GameFiles.Planet;
+import Bots.StateBot.GameFiles.PlanetWars;
 
 import java.util.HashMap;
 import java.util.List;
