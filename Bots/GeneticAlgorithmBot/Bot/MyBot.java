@@ -6,75 +6,123 @@ import Bots.GeneticAlgorithmBot.Bot.GameFiles.PlanetWars;
 
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.logging.Logger;
 
-
-// MANDARE PRESENTAZIONE PER MARTEDI MATTINA
 public class MyBot {
 
 	private static final Random random = new Random();
-	private static final Logger logger = Logger.getLogger("MyGeneticAlgorithmLogger");
+	private static Map<Integer, Integer> shipsRemaining;
 
+    public static void DoTurn(double[] chromosome, PlanetWars pw) {
 
-    public static void DoTurn(PlanetWars pw) {
+        try {
+            /* +-----------------------------------------------------------------------------------------------------+ */
+            /* |                            BEGINNING BOT GA PARAMETERS DECLARATION (15)                             | */
+            /* +-----------------------------------------------------------------------------------------------------+ */
+            /* |                                          Colonization (5)                                           | */
+            /* + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - + */
+            double colonizationProbability  = 0.0; // Probability
+            double colonizationGrowth       = 0.0; // Growth
+            double colonizationShips        = 0.0; // Ships
+            double colonizationRadius       = 0.0; // Radius
+            double expansionPriority        = 0.0; // How much the bot wants to expand with respect to how many planets he already has
 
-		random.doubles(0,1);
+            /* + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - + */
+            /* |                                             Defense (5)                                             | */
+            /* + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - + */
+            double defenseRadius            = 0.0; // Radius
+            double defenseIntensity         = 0.0; // Intensity
+            double defensePriority          = 0.0; // How much the bot is conservative
 
-		/* --- BEGINNING BOT GA PARAMETERS DECLARATION (16) --- */
+            /* + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - + */
+            /* |                                              Attack (5)                                             | */
+            /* + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - + */
+            double attackProbability        = 0.0; // Probability
+            double attackIntensity          = 0.0; // Intensity
+            double attackShips              = 0.0; // Ships
+            double attackRadius             = 0.0; // Radius
+            double attackPriority           = 0.0; // How much the bot is hostile
 
-		// Colonization (5)
-		double colonizationProbability 	= 0.75;	// Probability
-		double colonizationGrowth		= 0.5;	// Growth
-		double colonizationShips		= 0.5;	// Ships
-		double colonizationRadius		= 0.75;	// Radius
-		double expansionPriority		= 0.5;	// How much the bot wants to expand with respect to how many planets he already has
+            /* + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - + */
+            /* |                                     General Activity Parameters (2)                                 | */
+            /* + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - + */
+            double activityProbability      = 0.0; // Probability to do a turn
+            double maximumFleetsFlying      = 0.0; // Maximum fleets flying at a said time
 
-		// Defense (3)
-		double defenseRadius			= 0.5;	// Radius
-		double defenseIntensity			= 0.5;	// Intensity
-		double defensePriority			= 0.5;	// How much the bot is conservative
+            /* + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - + */
+            /* |                                   END OF BOT GA PARAMETERS DECLARATION                              | */
+            /* +-----------------------------------------------------------------------------------------------------+ */
 
-		// Attack (5)
-		double attackProbability		= 0.5;	// Probability
-		double attackIntensity			= 0.5;	// Intensity
-		double attackShips				= 0.5;	// Ships
-		double attackRadius				= 0.5;	// Radius
-		double attackPriority			= 0.5;	// How much the bot is hostile
+            random.doubles(0, 1);
 
-		// General activity parameters (2)
-		double activityProbability		= 1;	// Probability to do a turn
-		double maximumFleetsFlying		= 100;	// Maximum fleets flying at a said time
+            colonizationProbability  = chromosome[0];
+            colonizationGrowth       = chromosome[1];
+            colonizationShips        = chromosome[2];
+            colonizationRadius       = chromosome[3];
+            expansionPriority        = chromosome[4];
+            defenseRadius            = chromosome[5];
+            defenseIntensity         = chromosome[6];
+            defensePriority          = chromosome[7];
+            attackProbability        = chromosome[8];
+            attackIntensity          = chromosome[9];
+            attackShips              = chromosome[10];
+            attackRadius             = chromosome[11];
+            attackPriority           = chromosome[12];
+            activityProbability      = chromosome[13];
+            maximumFleetsFlying      = chromosome[14];
 
-		/* --- END OF GA PARAMETERS DECLARATION --- */
+            if (random.nextDouble() > (1 - activityProbability)) {
+            	printGameStatus(pw);
 
-		if(random.nextDouble() > (1-activityProbability)) {
-			List<Fleet> myFleets = pw.MyFleets();
-			List<Planet> myPlanets = pw.MyPlanets();
-			try {
-				Map<Integer, Integer> realNumberOfShips = new HashMap<>();
-				for(Planet myPlanet : myPlanets) {
-					realNumberOfShips.put(myPlanet.PlanetID(), myPlanet.NumShips());
-				}
-				if(myFleets.size() < maximumFleetsFlying) {
-					realNumberOfShips = performDefenseActivity(defenseRadius, defenseIntensity, defensePriority, pw, realNumberOfShips);
-				}
-				if(myFleets.size() < maximumFleetsFlying) {
-					realNumberOfShips = performAttackActivity(attackProbability, attackIntensity, attackShips, attackRadius, attackPriority, pw, realNumberOfShips);
-				}
-				if(myFleets.size() < maximumFleetsFlying) {
-					realNumberOfShips = performColonizationActivity(colonizationProbability, colonizationRadius, colonizationGrowth, colonizationShips, expansionPriority, pw, realNumberOfShips);
-				}
-				if(myFleets.size() < maximumFleetsFlying) {
-					performReinforcementActivity(pw, realNumberOfShips);
-				}
-			} catch (Exception e) {
-				System.err.println(e.toString());
-				System.err.println(e.getMessage());
-				e.printStackTrace();
-			}
-		}
+                List<Fleet> myFleets = pw.MyFleets();
+                List<Planet> myPlanets = pw.MyPlanets();
+                shipsRemaining = new HashMap<>();
+                for (Planet myPlanet : myPlanets) {
+                    shipsRemaining.put(myPlanet.PlanetID(), myPlanet.NumShips());
+                }
+                if (myFleets.size() < maximumFleetsFlying) {
+                    performDefenseActivity(defenseRadius, defenseIntensity, defensePriority, pw);
+                }
+                if (myFleets.size() < maximumFleetsFlying) {
+                    performAttackActivity(attackProbability, attackIntensity, attackShips, attackRadius, attackPriority, pw);
+                }
+                if (myFleets.size() < maximumFleetsFlying) {
+                    performColonizationActivity(colonizationProbability, colonizationRadius, colonizationGrowth, colonizationShips, expansionPriority, pw);
+                }
+                if (myFleets.size() < maximumFleetsFlying) {
+                    performReinforcementActivity(pw);
+                }
+
+            }
+        } catch (Exception e) {
+            System.err.println(e.toString());
+            //System.err.println(e.getMessage());
+        }
 	}
 
+	private static void printGameStatus(PlanetWars pw) {
+
+    	List<Planet> enemyPlanets = pw.EnemyPlanets();
+    	List<Fleet> enemyFleets = pw.EnemyFleets();
+    	int enemyShips = 0;
+    	for(Planet enemyPlanet : enemyPlanets) {
+    		enemyShips += enemyPlanet.NumShips();
+		}
+		for(Fleet enemyFleet : enemyFleets) {
+    		enemyShips += enemyFleet.NumShips();
+		}
+
+		List<Planet> playerPlanets = pw.MyPlanets();
+		List<Fleet> playerFleets = pw.MyFleets();
+		int playerShips = 0;
+		for(Planet playerPlanet : playerPlanets) {
+			playerShips += playerPlanet.NumShips();
+		}
+		for(Fleet playerFleet : playerFleets) {
+			playerShips += playerFleet.NumShips();
+		}
+
+		// System.err.println("Fitness: ciao");
+	}
 	/**
 	 * Computes and executes colonization tasks
 	 * @param colProb Colonization probability
@@ -84,7 +132,7 @@ public class MyBot {
 	 * @param expPriority Expansion priority parameter
 	 * @param pw PlanetWars instance to control the game
 	 */
-	private static Map<Integer,Integer> performColonizationActivity(double colProb, double colRad, double colGrow, double colShips, double expPriority, PlanetWars pw, Map<Integer,Integer> realShips) {
+	private static void performColonizationActivity(double colProb, double colRad, double colGrow, double colShips, double expPriority, PlanetWars pw) {
 		if(pw.NeutralPlanets().size()>0) {
 			try {
 				List<Planet> myPlanets = pw.MyPlanets();
@@ -101,7 +149,7 @@ public class MyBot {
 							double distance = pw.Distance(myPlanet.PlanetID(), neutralPlanet.PlanetID());
 							double growthRate = neutralPlanet.GrowthRate();
 							double numberOfShips = neutralPlanet.NumShips();
-							double myNumberOfShips = realShips.get(myPlanet.PlanetID());
+							double myNumberOfShips = shipsRemaining.get(myPlanet.PlanetID());
 
 							double colonizationScore = 1000 * (myNumberOfShips * expPriority) * (colRad / Math.pow(distance, 3.25)) * (growthRate / colGrow) / ((numberOfShips + 1) * (1 + colShips));
 							//double score = ((1+growthRate)*colGrow*2.5)/(1+(colShips * numberOfShips)*(distance/(10*colRad)));
@@ -134,26 +182,23 @@ public class MyBot {
 										numberOfShipsToMe += enemyFleet.NumShips();
 									}
 								}
-								int realNumberOfShips = realShips.get(sourcePlanet.PlanetID());
+								int realNumberOfShips = shipsRemaining.get(sourcePlanet.PlanetID());
 								if(realNumberOfShips/2 > numberOfShipsToMe) {
-									System.err.println("Mando in colonizzazione " + sourcePlanet.NumShips()/2 + "/" + sourcePlanet.NumShips() + " navi da " + sourcePlanet.PlanetID() + " a " + destinationPlanet.PlanetID());
+									//System.err.println("Mando in colonizzazione " + realNumberOfShips/2 + "/" + realNumberOfShips + " navi da " + sourcePlanet.PlanetID() + " a " + destinationPlanet.PlanetID());
 									pw.IssueOrder(sourcePlanet, destinationPlanet, realNumberOfShips/2);
-									realShips.put(sourcePlanet.PlanetID(), realNumberOfShips - realNumberOfShips/2);
+									shipsRemaining.put(sourcePlanet.PlanetID(), realNumberOfShips - realNumberOfShips/2);
 								}
 							}
 						}
 					}
 				}
 			} catch (Exception e) {
-				Logger.getLogger("MyBot").info(e.toString());
 				System.err.println(e.getMessage());
-				e.printStackTrace();
 			}
 		}
-		return realShips;
 	}
 
-	private static Map<Integer,Integer> performDefenseActivity(double defRad, double defIntensity, double defPriority, PlanetWars pw, Map<Integer,Integer> realShips) {
+	private static void performDefenseActivity(double defRad, double defIntensity, double defPriority, PlanetWars pw) {
 
 		List<Fleet> enemyFleets = pw.EnemyFleets();
 		List<Fleet> myFleets = pw.MyFleets();
@@ -180,7 +225,7 @@ public class MyBot {
 			for(Planet radiusPlanet : myPlanets) {
 				if(centerPlanet != radiusPlanet) {
 					int distance = pw.Distance(centerPlanet.PlanetID(), radiusPlanet.PlanetID());
-					int myNumberOfShips = realShips.get(radiusPlanet.PlanetID());
+					int myNumberOfShips = shipsRemaining.get(radiusPlanet.PlanetID());
 					//double colonizationScore = 1000 * (myNumberOfShips * expPriority) * (colRad / Math.pow(distance, 3.25)) * (growthRate / colGrow) / ((numberOfShips + 1) * (1 + colShips));
 
 					double distanceScore = (myNumberOfShips * (1 / defIntensity)) * (Math.pow(defRad,3.75) / Math.pow(distance, 2.5));
@@ -206,29 +251,29 @@ public class MyBot {
 					//System.err.println("Planet " + planetToDefend + ", Value: " + defenderPlanet.getValue());
 					Planet defendingPlanet = pw.GetPlanet(defenderPlanet.getKey());
 					double defendingValue  = defenderPlanet.getValue();
-					int numberOfShipsOnAttacked = realShips.get(planetToDefend);
-					int numberOfShipsOnDefender = realShips.get(defendingPlanet.PlanetID());
+					int numberOfShipsOnAttacked = shipsRemaining.get(planetToDefend);
+					int numberOfShipsOnDefender = shipsRemaining.get(defendingPlanet.PlanetID());
 					int urgeToDefend = numberOfShipsOnAttacked - numberOfShipsAttacking;
 
 					if(urgeToDefend < 0 && random.nextDouble()>(1-defPriority)) {
 
 						int shipsToSend = (int) (numberOfShipsOnDefender*defendingValue*defIntensity*(-urgeToDefend)/(1+numberOfShipsOnDefender));
-						if(shipsToSend > numberOfShipsOnDefender) {
-							shipsToSend = (int) (numberOfShipsOnDefender * defIntensity);
+						if(shipsToSend >= numberOfShipsOnDefender) {
+							shipsToSend = (int) (numberOfShipsOnDefender * defIntensity) - 1;
 						}
 						System.err.println("Mando in difesa " + shipsToSend + "/" + numberOfShipsOnDefender + " navi da " + defendingPlanet.PlanetID() + " a " + planetToDefend);
+						//System.err.println("Su " + defendingPlanet.PlanetID() + " rimangono " + (numberOfShipsOnDefender-shipsToSend) + " navi");
 						pw.IssueOrder(defendingPlanet.PlanetID(), planetToDefend, shipsToSend);
-						int realNumberOfShips = realShips.get(defendingPlanet.PlanetID());
-						realShips.put(realShips.get(defendingPlanet.PlanetID()),realNumberOfShips-shipsToSend);
+
+						shipsRemaining.put(defendingPlanet.PlanetID(),(numberOfShipsOnDefender - shipsToSend));
 						enemyAttackPlansMap.put(planetToDefend, enemyAttackPlansMap.get(planetToDefend)-shipsToSend);
 					}
 				}
 			}
 		}
-		return realShips;
 	}
 
-	private static Map<Integer,Integer> performAttackActivity(double attProb, double attInt, double attShips, double attRad, double attPriority, PlanetWars pw, Map<Integer,Integer> realShips) {
+	private static void performAttackActivity(double attProb, double attInt, double attShips, double attRad, double attPriority, PlanetWars pw) {
 
 		try {
 			List<Fleet> myFleets = pw.MyFleets();
@@ -256,7 +301,7 @@ public class MyBot {
 					int enemyDistance = pw.Distance(centerPlanet.PlanetID(), enemyRadiusPlanet.PlanetID());
 					int enemyGrowthRate = enemyRadiusPlanet.GrowthRate();
 					int enemyShipNumber = enemyRadiusPlanet.NumShips();
-					int myShipNumber = realShips.get(centerPlanet.PlanetID());
+					int myShipNumber = shipsRemaining.get(centerPlanet.PlanetID());
 
 					double attackScore = 1000 * (myShipNumber * attPriority) * (attRad / Math.pow(enemyDistance, 3.25)) * enemyGrowthRate / ((enemyShipNumber + 1) * (1 + attShips));
 					//System.err.println("Planet " + centerPlanet.PlanetID() + " -> " + enemyRadiusPlanet.PlanetID() + ": " + attackScore);
@@ -278,7 +323,7 @@ public class MyBot {
 						double attackDestinationScore = planetToAttack.getValue();
 
 						int numberOfShipsOnDefender = pw.GetPlanet(attackDestinationPlanet).NumShips();
-						int numberOfShipsOnAttacker = realShips.get(attackSourcePlanet);
+						int numberOfShipsOnAttacker = shipsRemaining.get(attackSourcePlanet);
 
 						// The highest this value, the best time it is to attack
 						int occasionToAttack = (int) (numberOfShipsOnAttacker * attInt) - numberOfShipsOnDefender;
@@ -290,26 +335,21 @@ public class MyBot {
 								shipsToSend = (int) (numberOfShipsOnAttacker * attInt);
 							}
 							if(shipsToSend > 0) {
-								System.err.println("Mando in attacco " + shipsToSend + "/" + numberOfShipsOnAttacker + " navi da " + attackSourcePlanet + " a " + attackDestinationPlanet);
+								//System.err.println("Mando in attacco " + shipsToSend + "/" + numberOfShipsOnAttacker + " navi da " + attackSourcePlanet + " a " + attackDestinationPlanet);
 								pw.IssueOrder(attackSourcePlanet, attackDestinationPlanet, shipsToSend);
 								myAttackPlans.put(attackDestinationPlanet, myAttackPlans.get(attackDestinationPlanet) + shipsToSend);
-								realShips.put(attackSourcePlanet, numberOfShipsOnAttacker - shipsToSend);
+								shipsRemaining.put(attackSourcePlanet, (numberOfShipsOnAttacker - shipsToSend));
 							}
 						}
 					}
 				}
 			}
 		} catch (Exception e) {
-			System.err.println("Eccezione nell'attacco");
-			System.err.println(e.getMessage());
-			System.err.println(e.toString());
+			//System.err.println("Eccezione nell'attacco");
 		}
-		//double colonizationScore = 1000 * (myNumberOfShips * expPriority) * (colRad / Math.pow(distance, 3.25)) * (growthRate / colGrow) / ((numberOfShips + 1) * (1 + colShips));
-
-		return realShips;
 	}
 
-	private static void performReinforcementActivity(PlanetWars pw, Map<Integer,Integer> realShips) {
+	private static void performReinforcementActivity(PlanetWars pw) {
 
 	}
 
@@ -346,31 +386,54 @@ public class MyBot {
 	}
 
 	public static void main(String[] args) {
-	String line = "";
-	String message = "";
-	int c;
-	try {
-	    while ((c = System.in.read()) >= 0) {
-		switch (c) {
-		case '\n':
-		    if (line.equals("go")) {
-			PlanetWars pw = new PlanetWars(message);
-			DoTurn(pw);
-		        pw.FinishTurn();
-			message = "";
-		    } else {
-			message += line + "\n";
-		    }
-		    line = "";
-		    break;
-		default:
-		    line += (char)c;
-		    break;
+
+		double[] doubleValues = new double[15];
+		if(args.length == 15) {
+			doubleValues = Arrays.stream(args).mapToDouble(Double::parseDouble).toArray();
 		}
-	    }
-	} catch (Exception e) {
-	    // Owned.
+		else {
+			doubleValues[0] = 0.5;
+			doubleValues[1] = 0.5;
+			doubleValues[2] = 0.5;
+			doubleValues[3] = 0.5;
+			doubleValues[4] = 0.5;
+			doubleValues[5] = 0.5;
+			doubleValues[6] = 0.5;
+			doubleValues[7] = 0.5;
+			doubleValues[8] = 0.5;
+			doubleValues[9] = 0.5;
+			doubleValues[10] = 0.5;
+			doubleValues[11] = 0.5;
+			doubleValues[12] = 0.5;
+			doubleValues[13] = 1;
+			doubleValues[14] = 500;
+		}
+
+        String line = "";
+        String message = "";
+        int c;
+        try {
+            while ((c = System.in.read()) >= 0) {
+				switch (c) {
+				case '\n':
+					if (line.trim().equals("go")) {
+						PlanetWars pw = new PlanetWars(message);
+						DoTurn(doubleValues,pw);
+						pw.FinishTurn();
+						message = "";
+					} else {
+						message += line + "\n";
+					}
+						line = "";
+						break;
+				default:
+					line += (char)c;
+					break;
+				}
+			}
+		} catch (Exception e) {
+			// Owned.
+		}
 	}
-    }
 }
 
