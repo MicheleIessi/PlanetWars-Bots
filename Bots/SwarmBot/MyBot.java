@@ -4,11 +4,8 @@ import Bots.SwarmBot.GameFiles.Planet;
 import Bots.SwarmBot.GameFiles.PlanetWars;
 import Bots.SwarmBot.PlanetStates.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.logging.Logger;
 
 public class MyBot {
 	// The DoTurn function is where your code goes. The Bots.SwarmBot.GameFiles.GameFiles.PlanetWars object
@@ -22,8 +19,11 @@ public class MyBot {
     // your own. Check out the tutorials and articles on the contest website at
     // http://www.ai-contest.com/resources.
 
-	private static final String LOGGER_NAME = "MySwarmBotLogger";
 	private static Map<Integer, IPlanetState> planetStateMap = null;
+	private static boolean firstTurn = true;
+	private static final int COLONIZATION_FORCE = 4;
+	private static final int GROUP_RADIUS = 50;
+	private static int CLOSEST_TO_CENTROID;
 
     public static void DoTurn(PlanetWars pw) {
 		/* idee:
@@ -31,40 +31,62 @@ public class MyBot {
 			2) assegnare uno stato a ogni pianeta tramite hashmap
 		 */
 		try {
-			planetStateMap = MyBot.updatePlanetStateMap(pw);
-
 			Planet closestToCentroid = MyBot.getClosestToCentroid(pw);
+			CLOSEST_TO_CENTROID = closestToCentroid.PlanetID();
+
+			//planetStateMap = ChaoticOrder.updatePlanetStateMap(pw);
+			planetStateMap = computePlanetRoles(pw);
 
 			List<Planet> myPlanets = pw.MyPlanets();
 
-			boolean hiveMindObtained = false;
 
 			if (myPlanets.contains(closestToCentroid) && !(planetStateMap.get(closestToCentroid.PlanetID()) instanceof HiveMindPlanetState)) {
 				planetStateMap.put(closestToCentroid.PlanetID(), new HiveMindPlanetState());
-				hiveMindObtained = true;
-				logMessage("HiveMind created");
-			} else {
-				if (hiveMindObtained) {
-					logMessage("HiveMind lost");
-				}
+				//System.err.println("HiveMind created");
 			}
 
-			if (!myPlanets.contains(closestToCentroid)) {
-				pw.IssueOrder(myPlanets.get(0), closestToCentroid, myPlanets.get(0).NumShips() / 2);
+			if(!firstTurn && !myPlanets.contains(closestToCentroid)) {
+				pw.IssueOrder(myPlanets.get(0), closestToCentroid, myPlanets.get(0).NumShips()/2);
+			}
+
+			if(firstTurn) {
+				List<Planet> neutralPlanets = pw.NeutralPlanets();
+				neutralPlanets.sort(((o1, o2) -> o2.GrowthRate() - o1.GrowthRate()));
+
+				int myShips = myPlanets.get(0).NumShips();
+				Map<Integer, Integer> colonizationPlans = new HashMap<>();
+
+				int numberOfFleetsSent = 0;
+				for(Planet neutralPlanet : neutralPlanets) {
+
+					if(numberOfFleetsSent < COLONIZATION_FORCE) {
+						if ((neutralPlanet.NumShips() + 1) < myShips) {
+							colonizationPlans.put(neutralPlanet.PlanetID(), neutralPlanet.NumShips() + 1);
+							myShips -= (neutralPlanet.NumShips() + 1);
+							numberOfFleetsSent ++;
+						}
+					}
+				}
+
+				for(Entry<Integer, Integer> entry : colonizationPlans.entrySet()) {
+					pw.IssueOrder(myPlanets.get(0), pw.GetPlanet(entry.getKey()), entry.getValue());
+				}
+				firstTurn = false;
 			}
 
 			for (Entry<Integer, IPlanetState> e : planetStateMap.entrySet()) {
-				e.getValue().performPlanetAction(pw.GetPlanet(e.getKey()), pw);
+				try {
+					//System.err.println(e.getKey() + " - " + e.getValue().getClass().getSimpleName());
+					e.getValue().performPlanetAction(pw.GetPlanet(e.getKey()), pw);
+				} catch (Exception ex) {
+					System.err.println(ex.getMessage());
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			logMessage(e.toString());
+			//System.err.println(e.toString());
 		}
     }
-
-    public static void logMessage(String msg) {
-		Logger.getLogger(LOGGER_NAME).info(msg);
-	}
 
     public static Map<Integer, IPlanetState> getPlanetStateMap(PlanetWars pw) {
     	if(planetStateMap == null) {
@@ -76,22 +98,127 @@ public class MyBot {
 	}
 
 	public static Map<Integer, IPlanetState> updatePlanetStateMap(PlanetWars planetWars) {
-    	Map<Integer, IPlanetState> planetStateMap = MyBot.getPlanetStateMap(planetWars);
-    	List<Planet> myPlanets = planetWars.MyPlanets();
-		for(Entry<Integer, IPlanetState> e : planetStateMap.entrySet()) {
-			if(!myPlanets.contains(planetWars.GetPlanet(e.getKey()))) {
-				planetStateMap.remove(e.getKey());
+    	try {
+
+			Map<Integer, IPlanetState> planetStateMap = MyBot.getPlanetStateMap(planetWars);
+			List<Planet> myPlanets = planetWars.MyPlanets();
+			for (Entry<Integer, IPlanetState> e : planetStateMap.entrySet()) {
+				if (!myPlanets.contains(planetWars.GetPlanet(e.getKey()))) {
+					planetStateMap.remove(e.getKey());
+				}
 			}
-		}
-		for(Planet planet : myPlanets) {
-			if(!planetStateMap.containsKey(planet.PlanetID())) {
-				planetStateMap.put(planet.PlanetID(), new WorkerPlanetState());
+			for (Planet planet : myPlanets) {
+				if (!planetStateMap.containsKey(planet.PlanetID())) {
+					planetStateMap.put(planet.PlanetID(), new WorkerPlanetState());
+				}
 			}
+
+			computePlanetRoles(planetWars);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return planetStateMap;
 	}
 
-    private static Planet getClosestToCentroid(PlanetWars pw) {
+	private static Map<Integer, IPlanetState> computePlanetRoles(PlanetWars planetWars) {
+
+		Map<Integer, IPlanetState> planetStateMap = getPlanetStateMap(planetWars);
+
+		try {
+
+			//System.err.println(planetStateMap.entrySet());
+			List<Planet> myPlanets = planetWars.MyPlanets();
+
+			for(Entry<Integer, IPlanetState> planetStateEntry : planetStateMap.entrySet()) {
+				if (!myPlanets.contains(planetWars.GetPlanet(planetStateEntry.getKey()))) {
+					planetStateMap.remove(planetStateEntry.getKey());
+				}
+			}
+			for(Planet myPlanet : myPlanets) {
+				if(!planetStateMap.containsKey(myPlanet.PlanetID())) {
+					planetStateMap.put(myPlanet.PlanetID(), new WorkerPlanetState());
+				}
+			}
+
+			Map<Integer, Map<Integer, Integer>> planetDistancesMap = new HashMap<>();
+
+			if(myPlanets.contains(planetWars.GetPlanet(CLOSEST_TO_CENTROID))) {
+				planetStateMap.put(CLOSEST_TO_CENTROID, new HiveMindPlanetState());
+			}
+
+			for (Planet center : myPlanets) {
+				if (center.PlanetID() != CLOSEST_TO_CENTROID) {
+					Map<Integer, Integer> planetDistance = new HashMap<>();
+					for (Planet radius : myPlanets) {
+						if (center != radius) {
+							int distance = planetWars.Distance(center.PlanetID(), radius.PlanetID());
+							if (distance < GROUP_RADIUS) {
+								planetDistance.put(radius.PlanetID(), distance);
+							}
+						}
+						//System.err.println(planetDistance.entrySet());
+						planetDistancesMap.put(center.PlanetID(), planetDistance);
+					}
+				}
+			}
+			// radius - center
+			if(planetDistancesMap.size() > 2) {
+
+				List<Integer> alreadyInNeighborhood = new ArrayList<>();
+				int neighborhoodNumber = 1;
+
+				for (Entry<Integer, Map<Integer, Integer>> mapEntry : planetDistancesMap.entrySet()) {
+
+					int centerPlanet = mapEntry.getKey();
+
+					if (!alreadyInNeighborhood.contains(centerPlanet)) {
+
+						Map<Integer, Integer> neighborhoodMap = new HashMap<>();
+						int growingValue = 0;
+
+						Map<Integer, Integer> neighborhood = mapEntry.getValue();
+						alreadyInNeighborhood.add(centerPlanet);
+
+						for (Entry<Integer, Integer> neighborhoodPlanet : neighborhood.entrySet()) {
+							growingValue += planetWars.GetPlanet(neighborhoodPlanet.getKey()).GrowthRate();
+							neighborhoodMap.put(neighborhoodPlanet.getKey(), centerPlanet);
+							alreadyInNeighborhood.add(neighborhoodPlanet.getKey());
+						}
+
+						//System.err.println("Neighborhood " + neighborhoodNumber + " created");
+						neighborhoodNumber++;
+
+						Iterator iterator = neighborhoodMap.entrySet().iterator();
+						boolean defender = true;
+						while(iterator.hasNext()) {
+							Entry planet = (Entry) iterator.next();
+							if(defender) {
+								planetStateMap.put((Integer) planet.getValue(), new DefenderPlanetState());
+								defender = false;
+							}
+							else {
+								planetStateMap.put((Integer) planet.getValue(), new WorkerPlanetState());
+							}
+						}
+					}
+				}
+
+				int alonePlanets = 0;
+				for(Planet alonePlanet : myPlanets) {
+					if(!alreadyInNeighborhood.contains(alonePlanet.PlanetID())) {
+						planetStateMap.put(alonePlanet.PlanetID(), new WorkerPlanetState());
+						alonePlanets++;
+					}
+				}
+				//System.err.println("Found " + alonePlanets + " alone planets");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return planetStateMap;
+	}
+
+	public static Planet getClosestToCentroid(PlanetWars pw) {
 
 		List<Planet> neutralPlanets = pw.Planets();
 		double coordX = 0;
