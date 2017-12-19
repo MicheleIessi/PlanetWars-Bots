@@ -3,6 +3,7 @@ package Bots.StateBot.GameStates;
 import Bots.StateBot.GameFiles.Fleet;
 import Bots.StateBot.GameFiles.Planet;
 import Bots.StateBot.GameFiles.PlanetWars;
+import Bots.StateBot.MyBot;
 
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +17,7 @@ public class ColonizationState implements IGameState {
     @Override
     public void doTurn(PlanetWars pw) {
 
+        Map<Integer,Integer> realGameState = MyBot.getRealGameState(pw);
         List<Planet> neutralPlanets = pw.NeutralPlanets();
         neutralPlanets.sort(((o1, o2) -> o2.GrowthRate() - o1.GrowthRate()));
         List<Planet> myPlanets = pw.MyPlanets();
@@ -44,8 +46,13 @@ public class ColonizationState implements IGameState {
                 int numberOfShipsColonizing = 0;
 
                 for (Planet p : myPlanets) {
-                    if(p.NumShips() > 50) {
-                        int colonizingShips = p.NumShips() / 3;
+
+                    for(Entry<Integer,Integer> e : realGameState.entrySet()) {
+                        System.err.println(e.getKey() + "-" + e.getValue());
+                    }
+
+                    if(realGameState.get(p.PlanetID()) > 50) {
+                        int colonizingShips = realGameState.get(p.PlanetID()) / 3;
                         colonizationPlans.put(p.PlanetID(), colonizingShips);
                         numberOfShipsColonizing += colonizingShips;
                         if (numberOfShipsColonizing >= numberOfShipsOnPlanet) {
@@ -57,6 +64,7 @@ public class ColonizationState implements IGameState {
                 for(Entry<Integer,Integer> e : colonizationPlans.entrySet()) {
                     sourcePlanet = pw.GetPlanet(e.getKey());
                     pw.IssueOrder(sourcePlanet, destinationPlanet, e.getValue());
+                    realGameState.put(sourcePlanet.PlanetID(), realGameState.get((sourcePlanet.PlanetID()) - e.getValue()));
                 }
             }
         }

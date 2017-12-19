@@ -3,6 +3,7 @@ package Bots.StateBot.GameStates;
 import Bots.StateBot.GameFiles.Fleet;
 import Bots.StateBot.GameFiles.Planet;
 import Bots.StateBot.GameFiles.PlanetWars;
+import Bots.StateBot.MyBot;
 
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +15,8 @@ public class DefenseState implements IGameState {
     public void doTurn(PlanetWars pw) {
 
         // re-maneuver ships from most populated planets to the ones under attack
+
+        Map<Integer,Integer> realGameState = MyBot.getRealGameState(pw);
 
         List<Planet> myPlanets = pw.MyPlanets();
         myPlanets.sort((o1, o2) -> o2.NumShips() - o1.NumShips());
@@ -37,7 +40,7 @@ public class DefenseState implements IGameState {
 
                     for (Planet p : myPlanets) {
                         if(p.PlanetID() != destinationPlanet.PlanetID()) {
-                            int defendingShips = p.NumShips() / 3;
+                            int defendingShips = realGameState.get(p.PlanetID()) / 3;
                             defensePlans.put(p.PlanetID(), defendingShips);
                             numberOfShipsAttacking += defendingShips;
                             if (numberOfShipsDefending >= numberOfShipsAttacking) {
@@ -50,6 +53,7 @@ public class DefenseState implements IGameState {
                     for (Entry<Integer, Integer> e : defensePlans.entrySet()) {
                         sourcePlanet = pw.GetPlanet(e.getKey());
                         pw.IssueOrder(sourcePlanet, destinationPlanet, e.getValue());
+                        realGameState.put(realGameState.get(sourcePlanet.PlanetID()), realGameState.get(sourcePlanet.PlanetID()) - e.getValue());
                     }
                 }
             }

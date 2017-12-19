@@ -13,16 +13,10 @@ import java.util.Map.Entry;
 public class MyBot {
 
 	public static IGameState gameState = null;
-    // The DoTurn function is where your code goes. The Bots.SwarmBot.GameFiles.GameFiles.PlanetWars object
-    // contains the state of the game, including information about all planets
-    // and fleets that currently exist. Inside this function, you issue orders
-    // using the pw.IssueOrder() function. For example, to send 10 ships from
-    // planet 3 to planet 8, you would say pw.IssueOrder(3, 8, 10).
-    //
-    // There is already a basic strategy in place here. You can use it as a
-    // starting point, or you can throw it out entirely and replace it with
-    // your own. Check out the tutorials and articles on the contest website at
-    // http://www.ai-contest.com/resources.
+	public static Map<Integer, Integer> realGameState;
+
+
+
     public static void DoTurn(PlanetWars pw) {
 		// (1) If we currently have a fleet in flight, just do nothing.
 //		if (pw.MyFleets().size() >= 1) {
@@ -33,15 +27,30 @@ public class MyBot {
 			2) attaccare i pianeti nemici più deboli con i pianeti più forti
 			3) difendere i pianeti attaccati SE sono difendibili, altrimenti spostare tutta la flotta da quel pianeta visto che verrebbe comunque distrutta
 		 */
-		gameState = MyBot.checkState(pw);
-		if(pw.EnemyPlanets().size() > 0) {
-			gameState.doTurn(pw);
-		}
-		else {
-			return;
-		}
 
+		try {
+
+			gameState = MyBot.checkState(pw);
+			if (pw.EnemyPlanets().size() > 0) {
+				gameState.doTurn(pw);
+			} else {
+				return;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.err.println(e.getMessage());
+
+		}
     }
+
+    public static Map<Integer,Integer> getRealGameState(PlanetWars planetWars) {
+
+    	realGameState = new HashMap<>();
+    	for(Planet myPlanet : planetWars.MyPlanets()) {
+    		realGameState.put(myPlanet.PlanetID(), myPlanet.NumShips());
+		}
+		return realGameState;
+	}
 
     public static IGameState checkState(PlanetWars pw) {
 
