@@ -1,4 +1,4 @@
-package Bots.GeneticAlgorithmBot.Bot.GameFiles;
+package Bots.ChaoticOrder.Bot.GameFiles;
 
 public class Fleet implements Comparable, Cloneable {
     // Initializes a fleet.

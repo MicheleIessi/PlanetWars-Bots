@@ -1,4 +1,4 @@
-package Bots.GeneticAlgorithmBot.Bot.GameFiles;
+package Bots.ChaoticOrder.Bot.GameFiles;
 
 public class Planet implements Cloneable {
     // Initializes a planet.
