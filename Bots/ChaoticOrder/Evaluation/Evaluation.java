@@ -38,7 +38,7 @@ public class Evaluation {
             String botParameterString = sb.toString();
 
             try {
-                File file = new File(root + "GENELOGS\\botlog" + botNumber + ".txt");
+                File file = new File(root + "GENELOGS2\\botlog" + botNumber + ".txt");
                 file.delete();
                 file.createNewFile();
 

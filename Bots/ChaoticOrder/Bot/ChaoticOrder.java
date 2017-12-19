@@ -18,7 +18,7 @@ public class ChaoticOrder {
     public static void DoTurn(double[] chromosome, String botNumber, PlanetWars pw) {
 
 		try {
-			printWriter = new PrintWriter(new BufferedWriter(new FileWriter("C:\\Users\\Michele\\Downloads\\PLANETWARS\\PLANETWARS\\GENELOGS\\botlog"+botNumber+".txt", true)));
+			printWriter = new PrintWriter(new BufferedWriter(new FileWriter("C:\\Users\\Michele\\Downloads\\PLANETWARS\\PLANETWARS\\GENELOGS2\\botlog"+botNumber+".txt", true)));
 		} catch (IOException e) {
 			System.err.println(e.toString());
 		}
@@ -316,6 +316,7 @@ public class ChaoticOrder {
 						}
 						//System.err.println("Mando in difesa " + shipsToSend + "/" + numberOfShipsOnDefender + " navi da " + defendingPlanet.PlanetID() + " a " + planetToDefend);
 						//System.err.println("Su " + defendingPlanet.PlanetID() + " rimangono " + (numberOfShipsOnDefender-shipsToSend) + " navi");
+
 						pw.IssueOrder(defendingPlanet.PlanetID(), planetToDefend, shipsToSend);
 
 						shipsRemaining.put(defendingPlanet.PlanetID(),(numberOfShipsOnDefender - shipsToSend));
@@ -386,11 +387,19 @@ public class ChaoticOrder {
 						if (shipsToSend > numberOfShipsOnAttacker) {
 							shipsToSend = (int) (numberOfShipsOnAttacker * attInt);
 						}
-						if(shipsToSend > 0) {
-							//System.err.println("Mando in attacco " + shipsToSend + "/" + numberOfShipsOnAttacker + " navi da " + attackSourcePlanet + " a " + attackDestinationPlanet);
-							pw.IssueOrder(attackSourcePlanet, attackDestinationPlanet, shipsToSend);
-							myAttackPlans.put(attackDestinationPlanet, myAttackPlans.get(attackDestinationPlanet) + shipsToSend);
-							shipsRemaining.put(attackSourcePlanet, (numberOfShipsOnAttacker - shipsToSend));
+						int numberOfShipsToMe = 0;
+						for(Fleet enemyFleet : enemyFleets) {
+							if(enemyFleet.DestinationPlanet() == attackSourcePlanet) {
+								numberOfShipsToMe += enemyFleet.NumShips();
+							}
+						}
+						if(numberOfShipsOnAttacker - shipsToSend > numberOfShipsToMe) {
+							if (shipsToSend > 0) {
+								//System.err.println("Mando in attacco " + shipsToSend + "/" + numberOfShipsOnAttacker + " navi da " + attackSourcePlanet + " a " + attackDestinationPlanet);
+								pw.IssueOrder(attackSourcePlanet, attackDestinationPlanet, shipsToSend);
+								myAttackPlans.put(attackDestinationPlanet, myAttackPlans.get(attackDestinationPlanet) + shipsToSend);
+								shipsRemaining.put(attackSourcePlanet, (numberOfShipsOnAttacker - shipsToSend));
+							}
 						}
 					}
 				}

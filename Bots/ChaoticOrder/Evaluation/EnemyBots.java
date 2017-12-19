@@ -7,6 +7,7 @@ public enum EnemyBots {
 //    ProspectorBot,
 //    RageBot,
 //    RandomBot;
+    EvaBot,
     GeneBot,
     ExGenebot;
 

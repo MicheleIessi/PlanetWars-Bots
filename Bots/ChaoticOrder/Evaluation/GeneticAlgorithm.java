@@ -6,8 +6,8 @@ import java.util.Map.Entry;
 
 public class GeneticAlgorithm {
 
-    private static final String ROOT = "C:\\Users\\Michele\\Downloads\\PLANETWARS\\PLANETWARS\\GENELOGS\\";
-    private static final int EVALUATIONS_COMPLETED = 39;
+    private static final String ROOT = "C:\\Users\\Michele\\Downloads\\PLANETWARS\\PLANETWARS\\GENELOGS2\\";
+    private static final int EVALUATIONS_COMPLETED = 13;
 
     static String firstBotParameters;
     static String secondBotParameters;
@@ -17,8 +17,8 @@ public class GeneticAlgorithm {
 
     public static void main(String args[]) {
 
-        int firstBotNumber = 3;
-        int secondBotNumber = 38;
+        int firstBotNumber = 38;
+        int secondBotNumber = 75;
 
         Map<int[], Double> scoreMap = new HashMap<>();
         for (int i = 0; i < EVALUATIONS_COMPLETED; i++) {
@@ -87,7 +87,7 @@ public class GeneticAlgorithm {
                     //System.out.println(turns + " turns, " + result + " was the winner. " + playerShips + " - " + enemyShips + " ships");
                 }
                 double totalNumberOfGames = numberOfLostGames + numberOfWonGames;
-                //System.out.println("Total games found: " + totalNumberOfGames);
+                System.out.println("Total games found: " + totalNumberOfGames);
 //                System.out.println("Games won: " + numberOfWonGames + "/" + totalNumberOfGames);
                 double percentage = (100 * numberOfWonGames) / totalNumberOfGames;
 //                System.out.println("Percentage: " + (Double.toString(percentage)) + "%");
